@@ -3,19 +3,20 @@ let currentAccount = null;
 
 async function initVeChain() {
     try {
-        // First check for VeWorld/Sync2 wallet
-        if (window.vechain) {
-            await window.vechain.enable();
+        // Check for Connex from VeWorld/Sync2
+        if (window.connex) {
             connex = window.connex;
-            return true;
-        }
-        // Fallback to checking just connex
-        else if (window.connex) {
-            connex = window.connex;
+            
+            // Verify we can access the Thor API
+            const thor = connex.thor;
+            if (!thor) {
+                throw new Error('Invalid Connex instance');
+            }
+
             return true;
         }
         
-        throw new Error('Please install VeWorld wallet from veworld.net');
+        throw new Error('Please install VeWorld wallet from veworld.net and refresh the page');
     } catch (error) {
         console.error('VeChain initialization error:', error);
         return false;
@@ -30,6 +31,10 @@ async function connectVeChainWallet() {
                 throw new Error('Failed to initialize VeChain wallet');
             }
         }
+
+        // Get network info first
+        const chainTag = connex.thor.genesis.id;
+        const network = chainTag === '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a' ? 'MainNet' : 'TestNet';
 
         // Request wallet connection using Connex certification
         const certResponse = await connex.vendor
@@ -50,7 +55,7 @@ async function connectVeChainWallet() {
         return {
             success: true,
             address: currentAccount,
-            network: connex.thor.genesis.id // Get network info
+            network: network
         };
     } catch (error) {
         console.error('Wallet connection error:', error);

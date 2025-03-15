@@ -12,7 +12,7 @@ async function handleWalletConnect() {
         
         if (result.success) {
             walletStatus.textContent = `Connected: ${formatAddress(result.address)}`;
-            networkStatus.textContent = `Network: ${result.network === '0x...main' ? 'MainNet' : 'TestNet'}`;
+            networkStatus.textContent = `Network: ${result.network}`;
             document.getElementById('connection-status').classList.remove('error');
             balanceContainer.classList.remove('hidden');
             await updateBalanceDisplay();

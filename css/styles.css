@@ -1,35 +1,142 @@
-.small-text {
-    font-size: 0.6rem;
-    margin-top: 0.5rem;
-    opacity: 0.8;
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    background: linear-gradient(45deg, #000000, #1a0000);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Press Start 2P', cursive;
+    color: #ff6b00;
 }
 
-.error-text {
-    color: #f00;
-    font-size: 0.7rem;
-    margin-top: 0.5rem;
+.retro-container {
+    text-align: center;
+    padding: 2rem;
+    background: rgba(20, 0, 0, 0.7);
+    border: 2px solid #ff3300;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(255, 59, 0, 0.3);
+}
+
+.retro-title {
+    color: #ff3300;
+    text-shadow: 
+        0 0 10px #ff3300,
+        0 0 20px #ff3300,
+        0 0 30px #ff0000;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    animation: flame-flicker 3s infinite alternate;
 }
 
 .status-box {
-    color: #0f0;
+    color: #ff6b00;
     font-size: 0.8rem;
     margin: 1rem 0;
     padding: 15px;
-    border: 1px solid #0f0;
+    border: 1px solid #ff6b00;
     border-radius: 4px;
+    background: rgba(26, 0, 0, 0.6);
+    box-shadow: 0 0 10px rgba(255, 107, 0, 0.2);
     transition: all 0.3s ease;
 }
 
 .status-box.error {
-    border-color: #f00;
-    color: #f00;
+    border-color: #ff0000;
+    color: #ff0000;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+}
+
+.small-text {
+    font-size: 0.6rem;
+    margin-top: 0.5rem;
+    opacity: 0.8;
+    color: #ff9955;
+}
+
+.retro-button {
+    background-color: transparent;
+    border: 3px solid #ff3300;
+    color: #ff3300;
+    padding: 15px 30px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 5px #ff3300;
+    margin: 1rem 0;
+}
+
+.retro-button:hover {
+    background-color: #ff3300;
+    color: #000;
+    box-shadow: 
+        0 0 20px #ff3300,
+        inset 0 0 10px #ff0000;
+    text-shadow: none;
 }
 
 .balance-box {
     margin-top: 2rem;
-    padding: 1rem;
-    border: 1px solid #0f0;
+    padding: 1.5rem;
+    border: 1px solid #ff6b00;
     border-radius: 4px;
-    color: #0f0;
+    color: #ff6b00;
+    background: rgba(26, 0, 0, 0.6);
+    box-shadow: 0 0 15px rgba(255, 107, 0, 0.2);
     transition: all 0.3s ease;
+}
+
+.balance-item {
+    margin: 0.8rem 0;
+    font-size: 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    text-shadow: 0 0 5px #ff6b00;
+}
+
+.error-text {
+    color: #ff0000;
+    font-size: 0.7rem;
+    margin-top: 0.5rem;
+    text-shadow: 0 0 5px #ff0000;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes flame-flicker {
+    0% {
+        text-shadow: 
+            0 0 10px #ff3300,
+            0 0 20px #ff3300,
+            0 0 30px #ff0000;
+    }
+    100% {
+        text-shadow: 
+            0 0 15px #ff3300,
+            0 0 25px #ff3300,
+            0 0 35px #ff0000,
+            0 0 45px #ff0000;
+    }
+}
+
+/* Add subtle flame animation to boxes */
+.status-box, .balance-box {
+    animation: box-glow 4s infinite alternate;
+}
+
+@keyframes box-glow {
+    from {
+        box-shadow: 0 0 10px rgba(255, 107, 0, 0.2);
+    }
+    to {
+        box-shadow: 0 0 20px rgba(255, 107, 0, 0.4);
+    }
 } 

@@ -31,8 +31,14 @@ async function updateBalanceDisplay() {
     try {
         const balances = await getBalances();
         if (balances) {
-            document.getElementById('vet-balance').textContent = `${balances.vet} VET`;
-            document.getElementById('vtho-balance').textContent = `${balances.vtho} VTHO`;
+            // Update main token displays
+            document.getElementById('vet-balance').textContent = `${balances.vet}`;
+            document.getElementById('vtho-balance').textContent = `${balances.vtho}`;
+            
+            // Update detailed balance displays
+            document.getElementById('vet-balance-detail').textContent = `${balances.vet} VET`;
+            document.getElementById('vtho-balance-detail').textContent = `${balances.vtho} VTHO`;
+            
             balanceError.classList.add('hidden');
         } else {
             throw new Error('Could not fetch balances');

@@ -17,14 +17,27 @@
             <div id="network-status" class="small-text">Network: VeChain Mainnet</div>
         </div>
         <button class="retro-button" onclick="handleWalletConnect()">CONNECT WALLET</button>
+        
+        <!-- New Token Balance Section -->
+        <div class="token-container">
+            <div class="token-box">
+                <div class="token-title">$VET</div>
+                <div id="vet-balance" class="token-amount">0.00</div>
+            </div>
+            <div class="token-box">
+                <div class="token-title">$VTHO</div>
+                <div id="vtho-balance" class="token-amount">0.00</div>
+            </div>
+        </div>
+
         <div id="balance-container" class="balance-box hidden">
             <div class="balance-item">
                 <span>VET Balance:</span>
-                <span id="vet-balance">-</span>
+                <span id="vet-balance-detail">-</span>
             </div>
             <div class="balance-item">
                 <span>VTHO Balance:</span>
-                <span id="vtho-balance">-</span>
+                <span id="vtho-balance-detail">-</span>
             </div>
             <div id="balance-error" class="error-text hidden">Error fetching balances</div>
         </div>

@@ -1,24 +1,46 @@
 let connex = null;
 let currentAccount = null;
 
+async function checkWallet() {
+    return new Promise((resolve) => {
+        if (window.vechain && window.connex) {
+            resolve(true);
+            return;
+        }
+
+        // Check every 100ms for up to 3 seconds
+        let attempts = 0;
+        const interval = setInterval(() => {
+            attempts++;
+            if (window.vechain && window.connex) {
+                clearInterval(interval);
+                resolve(true);
+            } else if (attempts >= 30) { // 3 seconds
+                clearInterval(interval);
+                resolve(false);
+            }
+        }, 100);
+    });
+}
+
 async function initVeChain() {
     try {
-        // Check for window.connex
-        if (!window.connex) {
-            console.log('VeWorld not detected, waiting...');
+        const walletDetected = await checkWallet();
+        if (!walletDetected) {
+            console.log('VeWorld not detected');
             return false;
         }
 
-        connex = window.connex;
-
-        // Verify Thor API
-        if (!connex.thor || !connex.vendor) {
-            console.log('Invalid Connex instance');
+        // Initialize VeChain
+        try {
+            await window.vechain.enable();
+            connex = window.connex;
+            console.log('VeWorld initialized successfully');
+            return true;
+        } catch (error) {
+            console.log('Failed to enable VeWorld:', error);
             return false;
         }
-
-        console.log('VeWorld detected successfully');
-        return true;
     } catch (error) {
         console.error('VeChain initialization error:', error);
         return false;

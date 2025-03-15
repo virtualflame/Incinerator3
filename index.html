@@ -46,14 +46,17 @@
     <script>
         // Initialize after page load
         document.addEventListener('DOMContentLoaded', async () => {
-            // Wait a bit for VeWorld to inject Connex
-            setTimeout(async () => {
-                try {
-                    await initVeChain();
-                } catch (error) {
-                    console.log('Waiting for VeWorld wallet...');
+            try {
+                // Initial check for wallet
+                const initialized = await initVeChain();
+                if (initialized) {
+                    console.log('VeWorld wallet ready');
+                } else {
+                    console.log('Please install VeWorld wallet');
                 }
-            }, 1000);
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
         });
     </script>
 </body>

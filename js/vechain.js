@@ -1,20 +1,21 @@
 let connex = null;
 let currentAccount = null;
 
+// TestNet Genesis ID
+const TESTNET_GENESIS = '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a';
+const TESTNET_VTHO = '0x0000000000000000000000000000456E65726779';
+
 async function checkWallet() {
     return new Promise((resolve) => {
-        // First check if already available
         if (typeof window.vechain !== 'undefined') {
             resolve(true);
             return;
         }
 
-        // Listen for vechain injection
         window.addEventListener('vechainConnect', () => {
             resolve(true);
         }, { once: true });
 
-        // Timeout after 3 seconds
         setTimeout(() => {
             resolve(false);
         }, 3000);
@@ -30,7 +31,6 @@ async function initVeChain() {
             return false;
         }
 
-        // Try to enable the wallet
         if (typeof window.vechain !== 'undefined') {
             try {
                 const accounts = await window.vechain.request({
@@ -38,19 +38,27 @@ async function initVeChain() {
                 });
                 
                 if (accounts && accounts.length > 0) {
-                    console.log('VeWorld wallet enabled');
                     connex = window.connex;
+                    
+                    // Verify we're on TestNet
+                    const network = connex.thor.genesis.id;
+                    if (network !== TESTNET_GENESIS) {
+                        console.log('Please switch to TestNet in VeWorld');
+                        return false;
+                    }
+                    
+                    console.log('VeWorld TestNet wallet enabled');
                     return true;
                 }
             } catch (error) {
-                console.log('Failed to enable wallet:', error);
+                console.log('Failed to enable TestNet wallet:', error);
                 return false;
             }
         }
 
         return false;
     } catch (error) {
-        console.error('VeChain initialization error:', error);
+        console.error('TestNet initialization error:', error);
         return false;
     }
 }
@@ -60,13 +68,15 @@ async function connectVeChainWallet() {
         if (!connex) {
             const initialized = await initVeChain();
             if (!initialized) {
-                throw new Error('Please install VeWorld wallet from veworld.net');
+                throw new Error('Please connect to VeChain TestNet in VeWorld');
             }
         }
 
-        // Get network info
+        // Verify TestNet connection
         const chainTag = connex.thor.genesis.id;
-        const network = chainTag === '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a' ? 'MainNet' : 'TestNet';
+        if (chainTag !== TESTNET_GENESIS) {
+            throw new Error('Please switch to TestNet in VeWorld');
+        }
 
         try {
             const certResponse = await connex.vendor
@@ -74,26 +84,26 @@ async function connectVeChainWallet() {
                     purpose: 'identification',
                     payload: {
                         type: 'text',
-                        content: 'Connect to Incinerator'
+                        content: 'Connect to Incinerator TestNet'
                     }
                 })
                 .request();
 
             if (!certResponse?.annex?.signer) {
-                throw new Error('Wallet connection failed');
+                throw new Error('TestNet wallet connection failed');
             }
 
             currentAccount = certResponse.annex.signer;
             return {
                 success: true,
                 address: currentAccount,
-                network: network
+                network: 'TestNet'
             };
         } catch (certError) {
-            throw new Error('Please unlock your VeWorld wallet and try again');
+            throw new Error('Please unlock your VeWorld wallet and ensure TestNet is selected');
         }
     } catch (error) {
-        console.error('Wallet connection error:', error);
+        console.error('TestNet wallet connection error:', error);
         return {
             success: false,
             error: error.message
@@ -103,31 +113,29 @@ async function connectVeChainWallet() {
 
 async function getBalances() {
     if (!currentAccount || !connex) {
-        throw new Error('Wallet not connected');
+        throw new Error('TestNet wallet not connected');
     }
 
     try {
-        // Get VET balance using thor.account
+        // Get TestNet VET balance
         const vetAccount = await connex.thor.account(currentAccount).get();
         if (!vetAccount) {
-            throw new Error('Failed to fetch VET balance');
+            throw new Error('Failed to fetch TestNet VET balance');
         }
 
-        // Get VTHO balance using contract call
-        const vthoContract = '0x0000000000000000000000000000456E65726779';
-        const vthoABI = {
+        // Get TestNet VTHO balance
+        const vthoMethod = connex.thor.account(TESTNET_VTHO).method({
             "constant": true,
             "inputs": [{"name": "_owner", "type": "address"}],
             "name": "balanceOf",
             "outputs": [{"name": "balance", "type": "uint256"}],
             "type": "function"
-        };
+        });
 
-        const vthoMethod = connex.thor.account(vthoContract).method(vthoABI);
         const vthoBalance = await vthoMethod.call(currentAccount);
 
         if (!vthoBalance?.decoded?.[0]) {
-            throw new Error('Failed to fetch VTHO balance');
+            throw new Error('Failed to fetch TestNet VTHO balance');
         }
 
         return {
@@ -135,7 +143,7 @@ async function getBalances() {
             vtho: formatBalance(vthoBalance.decoded[0])
         };
     } catch (error) {
-        console.error('Balance fetch error:', error);
+        console.error('TestNet balance fetch error:', error);
         throw error;
     }
 }

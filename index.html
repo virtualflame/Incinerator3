@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Incinerator - Retro</title>
+    <title>Incinerator - TestNet</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -11,29 +11,29 @@
         <h1 class="retro-title">INCINERATOR</h1>
         <div id="connection-status" class="status-box">
             <div id="wallet-status">Wallet Status: Not Connected</div>
-            <div id="network-status" class="small-text">Network: VeChain Mainnet</div>
+            <div id="network-status" class="small-text">Network: VeChain TestNet</div>
         </div>
         <button class="retro-button" onclick="handleWalletConnect()">CONNECT WALLET</button>
         
         <!-- Token Balance Section -->
         <div class="token-container">
             <div class="token-box">
-                <div class="token-title">$VET</div>
+                <div class="token-title">$VET (TestNet)</div>
                 <div id="vet-balance" class="token-amount">0.00</div>
             </div>
             <div class="token-box">
-                <div class="token-title">$VTHO</div>
+                <div class="token-title">$VTHO (TestNet)</div>
                 <div id="vtho-balance" class="token-amount">0.00</div>
             </div>
         </div>
 
         <div id="balance-container" class="balance-box hidden">
             <div class="balance-item">
-                <span>VET Balance:</span>
+                <span>TestNet VET:</span>
                 <span id="vet-balance-detail">-</span>
             </div>
             <div class="balance-item">
-                <span>VTHO Balance:</span>
+                <span>TestNet VTHO:</span>
                 <span id="vtho-balance-detail">-</span>
             </div>
             <div id="balance-error" class="error-text hidden">Error fetching balances</div>
@@ -54,10 +54,10 @@
             // Check for wallet
             checkWallet().then(async (hasWallet) => {
                 if (hasWallet) {
-                    console.log('VeWorld detected');
+                    console.log('VeWorld detected on TestNet');
                     await initVeChain();
                 } else {
-                    console.log('Please install VeWorld wallet');
+                    console.log('Please install VeWorld wallet and switch to TestNet');
                 }
             });
         });

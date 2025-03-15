@@ -10,7 +10,14 @@ async function handleWalletConnect() {
         
         // Show connecting status
         walletStatus.textContent = 'Checking for VeWorld wallet...';
-        networkStatus.textContent = 'Network: Connecting...';
+        networkStatus.textContent = 'Network: Checking...';
+        
+        // Try to initialize if not already done
+        if (!window.connex) {
+            await initVeChain();
+            // Give a small delay for wallet to be ready
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
         
         const result = await connectVeChainWallet();
         

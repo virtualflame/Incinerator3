@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incinerator - Retro</title>
     <link rel="stylesheet" href="css/styles.css">
-    <script src="js/vechain.js"></script>
-    <script src="js/app.js"></script>
 </head>
 <body>
     <div class="retro-container">
@@ -17,7 +15,7 @@
         </div>
         <button class="retro-button" onclick="handleWalletConnect()">CONNECT WALLET</button>
         
-        <!-- New Token Balance Section -->
+        <!-- Token Balance Section -->
         <div class="token-container">
             <div class="token-box">
                 <div class="token-title">$VET</div>
@@ -41,5 +39,22 @@
             <div id="balance-error" class="error-text hidden">Error fetching balances</div>
         </div>
     </div>
+
+    <!-- Load scripts at the end of body -->
+    <script src="js/vechain.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Initialize after page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait a bit for VeWorld to inject Connex
+            setTimeout(async () => {
+                try {
+                    await initVeChain();
+                } catch (error) {
+                    console.log('Waiting for VeWorld wallet...');
+                }
+            }, 1000);
+        });
+    </script>
 </body>
 </html> 

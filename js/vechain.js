@@ -3,10 +3,13 @@ let currentAccount = null;
 
 async function initVeChain() {
     try {
-        connex = new Connex({
-            node: 'https://mainnet.veblocks.net/',
-            network: 'main'
-        });
+        // Check if Sync2 or VeWorld is installed
+        if (!window.connex) {
+            throw new Error('Please install VeWorld wallet');
+        }
+        
+        // Use the existing connex instance from the wallet
+        connex = window.connex;
         return true;
     } catch (error) {
         console.error('VeChain initialization error:', error);
@@ -17,16 +20,24 @@ async function initVeChain() {
 async function connectVeChainWallet() {
     try {
         if (!connex) {
-            await initVeChain();
+            const initialized = await initVeChain();
+            if (!initialized) {
+                throw new Error('Failed to initialize VeChain');
+            }
         }
 
+        // Request wallet connection
         const certificateResponse = await connex.vendor.sign('cert', {
             purpose: 'identification',
             payload: {
                 type: 'text',
                 content: 'Connect to Incinerator'
             }
-        });
+        }).request();  // Add .request() here
+
+        if (!certificateResponse || !certificateResponse.annex || !certificateResponse.annex.signer) {
+            throw new Error('Invalid wallet response');
+        }
 
         currentAccount = certificateResponse.annex.signer;
         return {
@@ -37,7 +48,7 @@ async function connectVeChainWallet() {
         console.error('Wallet connection error:', error);
         return {
             success: false,
-            error: error.message
+            error: error.message || 'Failed to connect wallet'
         };
     }
 }

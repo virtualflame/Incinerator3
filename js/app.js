@@ -4,6 +4,11 @@ async function handleWalletConnect() {
     const balanceError = document.getElementById('balance-error');
     
     try {
+        // Check if VeWorld is installed
+        if (!window.connex) {
+            throw new Error('Please install VeWorld wallet');
+        }
+
         // Show connecting status
         walletStatus.textContent = 'Connecting...';
         
@@ -19,7 +24,7 @@ async function handleWalletConnect() {
         }
     } catch (error) {
         console.error('Connection error:', error);
-        walletStatus.textContent = 'Error: Could not connect wallet';
+        walletStatus.textContent = `Error: ${error.message}`;
         document.getElementById('connection-status').classList.add('error');
         balanceContainer.classList.add('hidden');
     }

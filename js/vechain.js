@@ -123,24 +123,35 @@ async function getBalances() {
             throw new Error('Failed to fetch TestNet VET balance');
         }
 
-        // Get TestNet VTHO balance
-        const vthoMethod = connex.thor.account(TESTNET_VTHO).method({
-            "constant": true,
-            "inputs": [{"name": "_owner", "type": "address"}],
-            "name": "balanceOf",
-            "outputs": [{"name": "balance", "type": "uint256"}],
-            "type": "function"
-        });
+        // Get TestNet VTHO balance using the energy contract
+        const vthoMethod = connex.thor
+            .account(TESTNET_VTHO)
+            .method({
+                "constant": true,
+                "inputs": [{"name": "_owner", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"name": "balance", "type": "uint256"}],
+                "type": "function"
+            });
 
         const vthoBalance = await vthoMethod.call(currentAccount);
+        console.log('Raw balances:', {
+            vet: vetAccount.balance,
+            vtho: vthoBalance?.decoded?.[0]
+        });
 
-        if (!vthoBalance?.decoded?.[0]) {
-            throw new Error('Failed to fetch TestNet VTHO balance');
-        }
+        // Format and return balances
+        const formattedVET = formatBalance(vetAccount.balance);
+        const formattedVTHO = formatBalance(vthoBalance?.decoded?.[0] || '0');
+
+        console.log('Formatted balances:', {
+            vet: formattedVET,
+            vtho: formattedVTHO
+        });
 
         return {
-            vet: formatBalance(vetAccount.balance),
-            vtho: formatBalance(vthoBalance.decoded[0])
+            vet: formattedVET,
+            vtho: formattedVTHO
         };
     } catch (error) {
         console.error('TestNet balance fetch error:', error);
@@ -149,5 +160,12 @@ async function getBalances() {
 }
 
 function formatBalance(balance) {
-    return (parseInt(balance) / 1e18).toFixed(2);
+    try {
+        const wei = BigInt(balance);
+        const formatted = Number(wei) / 1e18;
+        return formatted.toFixed(2);
+    } catch (error) {
+        console.error('Balance format error:', error);
+        return '0.00';
+    }
 } 

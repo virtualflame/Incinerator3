@@ -48,22 +48,36 @@ async function updateBalanceDisplay() {
     const balanceError = document.getElementById('balance-error');
     
     try {
+        console.log('Fetching balances...');
         const balances = await getBalances();
+        console.log('Received balances:', balances);
+
         if (balances) {
             // Update main token displays
-            document.getElementById('vet-balance').textContent = `${balances.vet}`;
-            document.getElementById('vtho-balance').textContent = `${balances.vtho}`;
-            
-            // Update detailed balance displays
-            document.getElementById('vet-balance-detail').textContent = `${balances.vet} VET`;
-            document.getElementById('vtho-balance-detail').textContent = `${balances.vtho} VTHO`;
+            const vetBalance = document.getElementById('vet-balance');
+            const vthoBalance = document.getElementById('vtho-balance');
+            const vetDetailBalance = document.getElementById('vet-balance-detail');
+            const vthoDetailBalance = document.getElementById('vtho-balance-detail');
+
+            console.log('Updating display elements:', {
+                vetBalance,
+                vthoBalance,
+                vetDetailBalance,
+                vthoDetailBalance
+            });
+
+            if (vetBalance) vetBalance.textContent = balances.vet;
+            if (vthoBalance) vthoBalance.textContent = balances.vtho;
+            if (vetDetailBalance) vetDetailBalance.textContent = `${balances.vet} VET`;
+            if (vthoDetailBalance) vthoDetailBalance.textContent = `${balances.vtho} VTHO`;
             
             balanceError.classList.add('hidden');
         } else {
-            throw new Error('Could not fetch balances');
+            throw new Error('Could not fetch TestNet balances');
         }
     } catch (error) {
-        console.error('Balance error:', error);
+        console.error('Balance display error:', error);
+        balanceError.textContent = `Error: ${error.message}`;
         balanceError.classList.remove('hidden');
     }
 }

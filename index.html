@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incinerator - TestNet</title>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- Add meta tag for VeWorld detection -->
+    <meta name="vechain-wallet-injected" content="true">
 </head>
 <body>
     <div class="retro-container">
@@ -41,26 +43,41 @@
     </div>
 
     <!-- Load scripts at the end of body -->
-    <script src="js/vechain.js"></script>
-    <script src="js/app.js"></script>
     <script>
-        // Initialize after page load
+        // Global wallet state
+        window.walletReady = false;
+
+        // Function to check if wallet is ready
+        function checkWalletStatus() {
+            if (window.connex && window.vechain) {
+                window.walletReady = true;
+                console.log('VeWorld wallet detected');
+                return true;
+            }
+            return false;
+        }
+
+        // Check wallet on load
         document.addEventListener('DOMContentLoaded', () => {
-            // Add VeWorld detection
-            const meta = document.createElement('meta');
-            meta.name = 'vechain-wallet-injected';
-            document.head.appendChild(meta);
+            // Initial check
+            if (checkWalletStatus()) return;
+
+            // Set up watchers
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds total
             
-            // Check for wallet
-            checkWallet().then(async (hasWallet) => {
-                if (hasWallet) {
-                    console.log('VeWorld detected on TestNet');
-                    await initVeChain();
-                } else {
-                    console.log('Please install VeWorld wallet and switch to TestNet');
+            const checkInterval = setInterval(() => {
+                attempts++;
+                if (checkWalletStatus() || attempts >= maxAttempts) {
+                    clearInterval(checkInterval);
+                    if (!window.walletReady) {
+                        console.log('VeWorld wallet not detected after timeout');
+                    }
                 }
-            });
+            }, 100);
         });
     </script>
+    <script src="js/vechain.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html> 

@@ -5,80 +5,37 @@ let currentAccount = null;
 const TESTNET_GENESIS = '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a';
 const TESTNET_VTHO = '0x0000000000000000000000000000456E65726779';
 
-async function checkWallet() {
-    return new Promise((resolve) => {
-        // Check for both connex and vechain
-        if (window.connex && window.vechain) {
-            resolve(true);
-            return;
+async function waitForWallet(timeout = 5000) {
+    const start = Date.now();
+    
+    while (Date.now() - start < timeout) {
+        if (window.walletReady) {
+            return true;
         }
-
-        // Listen for both connex and vechain injection
-        let hasConnex = !!window.connex;
-        let hasVechain = !!window.vechain;
-
-        const checkBoth = () => {
-            if (hasConnex && hasVechain) {
-                resolve(true);
-            }
-        };
-
-        window.addEventListener('connex', () => {
-            hasConnex = true;
-            checkBoth();
-        }, { once: true });
-
-        window.addEventListener('vechainConnect', () => {
-            hasVechain = true;
-            checkBoth();
-        }, { once: true });
-
-        // Timeout after 3 seconds
-        setTimeout(() => {
-            resolve(false);
-        }, 3000);
-    });
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return false;
 }
 
 async function initVeChain() {
     try {
-        const walletAvailable = await checkWallet();
+        const hasWallet = await waitForWallet();
+        if (!hasWallet) {
+            console.log('VeWorld wallet not detected');
+            return false;
+        }
+
+        // Get Connex instance
+        connex = window.connex;
         
-        if (!walletAvailable) {
-            console.log('VeWorld wallet not found');
+        // Verify TestNet connection
+        const network = connex.thor.genesis.id;
+        if (network !== TESTNET_GENESIS) {
+            console.log('Please switch to TestNet in VeWorld');
             return false;
         }
 
-        try {
-            // First request account access
-            const accounts = await window.vechain.request({
-                method: 'eth_requestAccounts'
-            });
-
-            if (!accounts || accounts.length === 0) {
-                throw new Error('No accounts found');
-            }
-
-            // Then get Connex instance
-            connex = window.connex;
-            
-            // Verify TestNet connection
-            const network = connex.thor.genesis.id;
-            if (network !== TESTNET_GENESIS) {
-                console.log('Wrong network, please switch to TestNet');
-                return false;
-            }
-
-            console.log('VeWorld TestNet wallet initialized:', {
-                account: accounts[0],
-                network: 'TestNet'
-            });
-            
-            return true;
-        } catch (error) {
-            console.error('Wallet initialization error:', error);
-            return false;
-        }
+        return true;
     } catch (error) {
         console.error('VeChain initialization error:', error);
         return false;

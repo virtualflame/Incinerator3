@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incinerator - TestNet</title>
     <link rel="stylesheet" href="css/styles.css">
-    <!-- Add meta tag for VeWorld detection -->
+    <!-- VeWorld detection meta tags -->
     <meta name="vechain-wallet-injected" content="true">
+    <meta name="vechain-wallet-test" content="true">
 </head>
 <body>
     <div class="retro-container">
@@ -49,7 +50,7 @@
 
         // Function to check if wallet is ready
         function checkWalletStatus() {
-            if (window.connex && window.vechain) {
+            if (typeof window.vechain !== 'undefined') {
                 window.walletReady = true;
                 console.log('VeWorld wallet detected');
                 return true;
@@ -57,21 +58,26 @@
             return false;
         }
 
-        // Check wallet on load
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initial check
+        // Wait for VeWorld to be injected
+        window.addEventListener('load', () => {
+            // Check immediately
             if (checkWalletStatus()) return;
 
-            // Set up watchers
+            // Listen for VeWorld injection
+            window.addEventListener('vechainConnect', () => {
+                checkWalletStatus();
+            });
+
+            // Also check periodically for a few seconds
             let attempts = 0;
-            const maxAttempts = 50; // 5 seconds total
+            const maxAttempts = 50; // 5 seconds
             
             const checkInterval = setInterval(() => {
                 attempts++;
                 if (checkWalletStatus() || attempts >= maxAttempts) {
                     clearInterval(checkInterval);
                     if (!window.walletReady) {
-                        console.log('VeWorld wallet not detected after timeout');
+                        console.log('Please install VeWorld wallet');
                     }
                 }
             }, 100);

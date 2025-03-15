@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incinerator - TestNet</title>
     <link rel="stylesheet" href="css/styles.css">
+    <meta name="vechain-wallet-injected" content="true">
 </head>
 <body>
     <div class="retro-container">
@@ -31,40 +32,28 @@
         let connex = null;
         let currentAccount = null;
 
-        // Wait for VeWorld to inject Connex
-        function waitForConnex(timeout = 3000) {
-            return new Promise((resolve) => {
-                if (window.connex) {
-                    resolve(window.connex);
-                    return;
-                }
-
-                const start = Date.now();
-                const interval = setInterval(() => {
-                    if (window.connex) {
-                        clearInterval(interval);
-                        resolve(window.connex);
-                    } else if (Date.now() - start >= timeout) {
-                        clearInterval(interval);
-                        resolve(null);
-                    }
-                }, 100);
-            });
-        }
+        // Wait for page to load
+        window.addEventListener('load', () => {
+            // Check for VeWorld
+            if (window.vechain) {
+                console.log('VeWorld detected');
+                connex = window.connex;
+            }
+        });
 
         async function connectWallet() {
             try {
-                // Update status
                 const statusElement = document.getElementById('wallet-status');
                 statusElement.textContent = 'Connecting...';
 
-                // Wait for Connex to be available
-                connex = await waitForConnex();
-                if (!connex) {
-                    throw new Error('Please install VeWorld wallet');
+                // Check if VeWorld is installed
+                if (!window.vechain || !window.connex) {
+                    throw new Error('Please install VeWorld wallet from veworld.net');
                 }
 
-                // Request wallet connection
+                connex = window.connex;
+
+                // Try to connect
                 const certResponse = await connex.vendor.sign('cert', {
                     purpose: 'identification',
                     payload: {
@@ -73,33 +62,39 @@
                     }
                 }).request();
 
-                if (certResponse?.annex?.signer) {
-                    currentAccount = certResponse.annex.signer;
-                    statusElement.textContent = 
-                        `Connected: ${currentAccount.slice(0, 6)}...${currentAccount.slice(-4)}`;
-                    
-                    // Get balances
-                    const vetBalance = await connex.thor.account(currentAccount).get();
-                    const vetAmount = (parseInt(vetBalance.balance) / 1e18).toFixed(2);
-                    document.getElementById('vet-balance').textContent = vetAmount;
+                if (!certResponse?.annex?.signer) {
+                    throw new Error('Connection failed. Please try again.');
+                }
 
-                    // Get VTHO balance
-                    const vthoContract = '0x0000000000000000000000000000456E65726779';
-                    const vthoMethod = connex.thor.account(vthoContract).method({
-                        constant: true,
-                        inputs: [{name: '_owner', type: 'address'}],
-                        name: 'balanceOf',
-                        outputs: [{name: 'balance', type: 'uint256'}]
-                    });
-                    
-                    const vthoBalance = await vthoMethod.call(currentAccount);
-                    const vthoAmount = (parseInt(vthoBalance.decoded[0]) / 1e18).toFixed(2);
+                currentAccount = certResponse.annex.signer;
+                statusElement.textContent = 
+                    `Connected: ${currentAccount.slice(0, 6)}...${currentAccount.slice(-4)}`;
+
+                // Get VET balance
+                const vetBalance = await connex.thor.account(currentAccount).get();
+                if (vetBalance) {
+                    const vetAmount = (Number(vetBalance.balance) / 1e18).toFixed(2);
+                    document.getElementById('vet-balance').textContent = vetAmount;
+                }
+
+                // Get VTHO balance
+                const vthoContract = '0x0000000000000000000000000000456E65726779';
+                const vthoMethod = connex.thor.account(vthoContract).method({
+                    constant: true,
+                    inputs: [{name: '_owner', type: 'address'}],
+                    name: 'balanceOf',
+                    outputs: [{name: 'balance', type: 'uint256'}]
+                });
+
+                const vthoBalance = await vthoMethod.call(currentAccount);
+                if (vthoBalance?.decoded?.[0]) {
+                    const vthoAmount = (Number(vthoBalance.decoded[0]) / 1e18).toFixed(2);
                     document.getElementById('vtho-balance').textContent = vthoAmount;
                 }
+
             } catch (error) {
                 console.error('Wallet connection error:', error);
-                document.getElementById('wallet-status').textContent = 
-                    `Error: ${error.message}`;
+                statusElement.textContent = `Error: ${error.message}`;
             }
         }
     </script>

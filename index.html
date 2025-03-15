@@ -31,15 +31,40 @@
         let connex = null;
         let currentAccount = null;
 
-        async function connectWallet() {
-            try {
-                if (!window.vechain) {
-                    alert('Please install VeWorld wallet');
+        // Wait for VeWorld to inject Connex
+        function waitForConnex(timeout = 3000) {
+            return new Promise((resolve) => {
+                if (window.connex) {
+                    resolve(window.connex);
                     return;
                 }
 
-                connex = window.connex;
-                
+                const start = Date.now();
+                const interval = setInterval(() => {
+                    if (window.connex) {
+                        clearInterval(interval);
+                        resolve(window.connex);
+                    } else if (Date.now() - start >= timeout) {
+                        clearInterval(interval);
+                        resolve(null);
+                    }
+                }, 100);
+            });
+        }
+
+        async function connectWallet() {
+            try {
+                // Update status
+                const statusElement = document.getElementById('wallet-status');
+                statusElement.textContent = 'Connecting...';
+
+                // Wait for Connex to be available
+                connex = await waitForConnex();
+                if (!connex) {
+                    throw new Error('Please install VeWorld wallet');
+                }
+
+                // Request wallet connection
                 const certResponse = await connex.vendor.sign('cert', {
                     purpose: 'identification',
                     payload: {
@@ -50,7 +75,7 @@
 
                 if (certResponse?.annex?.signer) {
                     currentAccount = certResponse.annex.signer;
-                    document.getElementById('wallet-status').textContent = 
+                    statusElement.textContent = 
                         `Connected: ${currentAccount.slice(0, 6)}...${currentAccount.slice(-4)}`;
                     
                     // Get balances
@@ -74,7 +99,7 @@
             } catch (error) {
                 console.error('Wallet connection error:', error);
                 document.getElementById('wallet-status').textContent = 
-                    'Error: Could not connect wallet';
+                    `Error: ${error.message}`;
             }
         }
     </script>

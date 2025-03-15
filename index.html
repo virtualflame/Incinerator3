@@ -31,22 +31,32 @@
     <script>
         let connex = null;
         let currentAccount = null;
+        let walletReady = false;
 
         // Wait for page to load
         window.addEventListener('load', () => {
-            // Check for VeWorld
-            if (window.vechain) {
-                console.log('VeWorld detected');
-                connex = window.connex;
-            }
+            // Give VeWorld a moment to inject
+            setTimeout(() => {
+                if (window.vechain && window.connex) {
+                    console.log('VeWorld detected');
+                    connex = window.connex;
+                    walletReady = true;
+                }
+            }, 1000);
         });
 
         async function connectWallet() {
+            const statusElement = document.getElementById('wallet-status');
+            
             try {
-                const statusElement = document.getElementById('wallet-status');
                 statusElement.textContent = 'Connecting...';
 
-                // Check if VeWorld is installed
+                // Wait a moment if wallet isn't ready yet
+                if (!walletReady) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+
+                // Final check for wallet
                 if (!window.vechain || !window.connex) {
                     throw new Error('Please install VeWorld wallet from veworld.net');
                 }

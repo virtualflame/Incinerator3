@@ -3,44 +3,52 @@ let currentAccount = null;
 
 async function checkWallet() {
     return new Promise((resolve) => {
-        if (window.vechain && window.connex) {
+        // First check if already available
+        if (typeof window.vechain !== 'undefined') {
             resolve(true);
             return;
         }
 
-        // Check every 100ms for up to 3 seconds
-        let attempts = 0;
-        const interval = setInterval(() => {
-            attempts++;
-            if (window.vechain && window.connex) {
-                clearInterval(interval);
-                resolve(true);
-            } else if (attempts >= 30) { // 3 seconds
-                clearInterval(interval);
-                resolve(false);
-            }
-        }, 100);
+        // Listen for vechain injection
+        window.addEventListener('vechainConnect', () => {
+            resolve(true);
+        }, { once: true });
+
+        // Timeout after 3 seconds
+        setTimeout(() => {
+            resolve(false);
+        }, 3000);
     });
 }
 
 async function initVeChain() {
     try {
-        const walletDetected = await checkWallet();
-        if (!walletDetected) {
-            console.log('VeWorld not detected');
+        const walletAvailable = await checkWallet();
+        
+        if (!walletAvailable) {
+            console.log('VeWorld wallet not found');
             return false;
         }
 
-        // Initialize VeChain
-        try {
-            await window.vechain.enable();
-            connex = window.connex;
-            console.log('VeWorld initialized successfully');
-            return true;
-        } catch (error) {
-            console.log('Failed to enable VeWorld:', error);
-            return false;
+        // Try to enable the wallet
+        if (typeof window.vechain !== 'undefined') {
+            try {
+                const accounts = await window.vechain.request({
+                    method: 'eth_requestAccounts'
+                });
+                
+                if (accounts && accounts.length > 0) {
+                    console.log('VeWorld wallet enabled');
+                    connex = window.connex;
+                    return true;
+                }
+            } catch (error) {
+                console.log('Failed to enable wallet:', error);
+                return false;
+            }
         }
+
+        return false;
     } catch (error) {
         console.error('VeChain initialization error:', error);
         return false;

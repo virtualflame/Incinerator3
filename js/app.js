@@ -9,13 +9,20 @@ async function handleWalletConnect() {
         document.getElementById('connection-status').classList.remove('error');
         
         // Show connecting status
-        walletStatus.textContent = 'Checking for VeWorld wallet...';
+        walletStatus.textContent = 'Connecting to VeWorld...';
         networkStatus.textContent = 'Network: Checking...';
-        
-        // Initialize VeChain
-        const initialized = await initVeChain();
-        if (!initialized) {
-            throw new Error('Please install VeWorld wallet from veworld.net and refresh the page');
+
+        // Check if VeWorld is installed
+        if (typeof window.vechain === 'undefined') {
+            throw new Error('Please install VeWorld wallet from veworld.net');
+        }
+
+        // Initialize if needed
+        if (!connex) {
+            const initialized = await initVeChain();
+            if (!initialized) {
+                throw new Error('Please unlock your VeWorld wallet');
+            }
         }
         
         const result = await connectVeChainWallet();

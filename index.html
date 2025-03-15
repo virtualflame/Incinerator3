@@ -45,18 +45,21 @@
     <script src="js/app.js"></script>
     <script>
         // Initialize after page load
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // Initial check for wallet
-                const initialized = await initVeChain();
-                if (initialized) {
-                    console.log('VeWorld wallet ready');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add VeWorld detection
+            const meta = document.createElement('meta');
+            meta.name = 'vechain-wallet-injected';
+            document.head.appendChild(meta);
+            
+            // Check for wallet
+            checkWallet().then(async (hasWallet) => {
+                if (hasWallet) {
+                    console.log('VeWorld detected');
+                    await initVeChain();
                 } else {
                     console.log('Please install VeWorld wallet');
                 }
-            } catch (error) {
-                console.error('Initialization error:', error);
-            }
+            });
         });
     </script>
 </body>

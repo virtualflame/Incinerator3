@@ -1,22 +1,40 @@
 let connex = null;
 let currentAccount = null;
 
+async function waitForConnex(timeout = 3000) {
+    return new Promise((resolve) => {
+        if (window.connex) {
+            return resolve(window.connex);
+        }
+
+        const startTime = Date.now();
+
+        const interval = setInterval(() => {
+            if (window.connex) {
+                clearInterval(interval);
+                resolve(window.connex);
+            } else if (Date.now() - startTime >= timeout) {
+                clearInterval(interval);
+                resolve(null);
+            }
+        }, 100);
+    });
+}
+
 async function initVeChain() {
     try {
-        // Check for Connex from VeWorld/Sync2
-        if (window.connex) {
-            connex = window.connex;
-            
-            // Verify we can access the Thor API
-            const thor = connex.thor;
-            if (!thor) {
-                throw new Error('Invalid Connex instance');
-            }
-
-            return true;
-        }
+        connex = await waitForConnex();
         
-        throw new Error('Please install VeWorld wallet from veworld.net and refresh the page');
+        if (!connex) {
+            throw new Error('VeWorld wallet not detected. Please install from veworld.net');
+        }
+
+        // Verify Thor API
+        if (!connex.thor || !connex.vendor) {
+            throw new Error('Invalid Connex instance');
+        }
+
+        return true;
     } catch (error) {
         console.error('VeChain initialization error:', error);
         return false;
@@ -28,40 +46,43 @@ async function connectVeChainWallet() {
         if (!connex) {
             const initialized = await initVeChain();
             if (!initialized) {
-                throw new Error('Failed to initialize VeChain wallet');
+                throw new Error('Please install VeWorld wallet to continue');
             }
         }
 
-        // Get network info first
+        // Get network info
         const chainTag = connex.thor.genesis.id;
         const network = chainTag === '0x00000000851caf3cfdb6e899cf5958bfb1ac3413d346d43539627e6be7ec1b4a' ? 'MainNet' : 'TestNet';
 
-        // Request wallet connection using Connex certification
-        const certResponse = await connex.vendor
-            .sign('cert', {
-                purpose: 'identification',
-                payload: {
-                    type: 'text',
-                    content: 'Connect to Incinerator'
-                }
-            })
-            .request();
+        try {
+            const certResponse = await connex.vendor
+                .sign('cert', {
+                    purpose: 'identification',
+                    payload: {
+                        type: 'text',
+                        content: 'Connect to Incinerator'
+                    }
+                })
+                .request();
 
-        if (!certResponse?.annex?.signer) {
-            throw new Error('Invalid wallet response');
+            if (!certResponse?.annex?.signer) {
+                throw new Error('Wallet connection failed');
+            }
+
+            currentAccount = certResponse.annex.signer;
+            return {
+                success: true,
+                address: currentAccount,
+                network: network
+            };
+        } catch (certError) {
+            throw new Error('Please unlock your VeWorld wallet and try again');
         }
-
-        currentAccount = certResponse.annex.signer;
-        return {
-            success: true,
-            address: currentAccount,
-            network: network
-        };
     } catch (error) {
         console.error('Wallet connection error:', error);
         return {
             success: false,
-            error: error.message || 'Failed to connect wallet'
+            error: error.message
         };
     }
 }

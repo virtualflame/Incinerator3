@@ -5,15 +5,18 @@ async function handleWalletConnect() {
     const balanceError = document.getElementById('balance-error');
     
     try {
+        // Reset any previous error states
+        document.getElementById('connection-status').classList.remove('error');
+        
         // Show connecting status
-        walletStatus.textContent = 'Connecting to VeWorld...';
+        walletStatus.textContent = 'Checking for VeWorld wallet...';
+        networkStatus.textContent = 'Network: Connecting...';
         
         const result = await connectVeChainWallet();
         
         if (result.success) {
             walletStatus.textContent = `Connected: ${formatAddress(result.address)}`;
             networkStatus.textContent = `Network: ${result.network}`;
-            document.getElementById('connection-status').classList.remove('error');
             balanceContainer.classList.remove('hidden');
             await updateBalanceDisplay();
         } else {

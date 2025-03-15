@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incinerator - TestNet</title>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- VeWorld detection -->
     <meta name="vechain-wallet-injected" content="true">
+    <meta name="vechain-wallet-test" content="true">
 </head>
 <body>
     <div class="retro-container">
@@ -33,17 +35,34 @@
         const connectButton = document.getElementById('connectButton');
         let currentAccount = null;
 
+        // Check for VeWorld every 100ms for up to 5 seconds
+        function checkForVeWorld() {
+            return new Promise((resolve) => {
+                let attempts = 0;
+                const interval = setInterval(() => {
+                    if (window.vechain && window.connex) {
+                        clearInterval(interval);
+                        resolve(true);
+                    } else if (attempts >= 50) { // 5 seconds
+                        clearInterval(interval);
+                        resolve(false);
+                    }
+                    attempts++;
+                }, 100);
+            });
+        }
+
         async function handleConnect() {
             try {
                 statusElement.textContent = 'Checking for VeWorld...';
                 connectButton.disabled = true;
 
-                // Check for Sync2/VeWorld
-                if (typeof window !== 'undefined' && window.connex) {
-                    await connectWallet();
-                } else {
+                const hasVeWorld = await checkForVeWorld();
+                if (!hasVeWorld) {
                     throw new Error('Please install VeWorld wallet and refresh the page');
                 }
+
+                await connectWallet();
             } catch (error) {
                 console.error('Connection error:', error);
                 statusElement.textContent = `Error: ${error.message}`;

@@ -4,13 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incinerator - Retro</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@vechain/connex@2"></script>
+    <script src="js/vechain.js"></script>
+    <script src="js/app.js"></script>
 </head>
 <body>
     <div class="retro-container">
         <h1 class="retro-title">INCINERATOR</h1>
-        <button class="retro-button" onclick="connectWallet()">CONNECT WALLET</button>
+        <div id="connection-status" class="status-box">
+            <div id="wallet-status">Wallet Status: Not Connected</div>
+            <div id="network-status" class="small-text">Network: VeChain Mainnet</div>
+        </div>
+        <button class="retro-button" onclick="handleWalletConnect()">CONNECT WALLET</button>
+        <div id="balance-container" class="balance-box hidden">
+            <div class="balance-item">
+                <span>VET Balance:</span>
+                <span id="vet-balance">-</span>
+            </div>
+            <div class="balance-item">
+                <span>VTHO Balance:</span>
+                <span id="vtho-balance">-</span>
+            </div>
+            <div id="balance-error" class="error-text hidden">Error fetching balances</div>
+        </div>
     </div>
-    <script src="app.js"></script>
 </body>
 </html> 

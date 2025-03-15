@@ -1,30 +1,28 @@
 async function handleWalletConnect() {
     const walletStatus = document.getElementById('wallet-status');
+    const networkStatus = document.getElementById('network-status');
     const balanceContainer = document.getElementById('balance-container');
     const balanceError = document.getElementById('balance-error');
     
     try {
-        // Check if VeWorld is installed
-        if (!window.connex) {
-            throw new Error('Please install VeWorld wallet');
-        }
-
         // Show connecting status
-        walletStatus.textContent = 'Connecting...';
+        walletStatus.textContent = 'Connecting to VeWorld...';
         
         const result = await connectVeChainWallet();
         
         if (result.success) {
             walletStatus.textContent = `Connected: ${formatAddress(result.address)}`;
+            networkStatus.textContent = `Network: ${result.network === '0x...main' ? 'MainNet' : 'TestNet'}`;
             document.getElementById('connection-status').classList.remove('error');
             balanceContainer.classList.remove('hidden');
             await updateBalanceDisplay();
         } else {
-            throw new Error(result.error || 'Failed to connect');
+            throw new Error(result.error);
         }
     } catch (error) {
         console.error('Connection error:', error);
         walletStatus.textContent = `Error: ${error.message}`;
+        networkStatus.textContent = 'Network: Not Connected';
         document.getElementById('connection-status').classList.add('error');
         balanceContainer.classList.add('hidden');
     }

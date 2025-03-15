@@ -3,14 +3,19 @@ let currentAccount = null;
 
 async function initVeChain() {
     try {
-        // Check if Sync2 or VeWorld is installed
-        if (!window.connex) {
-            throw new Error('Please install VeWorld wallet');
+        // First check for VeWorld/Sync2 wallet
+        if (window.vechain) {
+            await window.vechain.enable();
+            connex = window.connex;
+            return true;
+        }
+        // Fallback to checking just connex
+        else if (window.connex) {
+            connex = window.connex;
+            return true;
         }
         
-        // Use the existing connex instance from the wallet
-        connex = window.connex;
-        return true;
+        throw new Error('Please install VeWorld wallet from veworld.net');
     } catch (error) {
         console.error('VeChain initialization error:', error);
         return false;
@@ -22,27 +27,30 @@ async function connectVeChainWallet() {
         if (!connex) {
             const initialized = await initVeChain();
             if (!initialized) {
-                throw new Error('Failed to initialize VeChain');
+                throw new Error('Failed to initialize VeChain wallet');
             }
         }
 
-        // Request wallet connection
-        const certificateResponse = await connex.vendor.sign('cert', {
-            purpose: 'identification',
-            payload: {
-                type: 'text',
-                content: 'Connect to Incinerator'
-            }
-        }).request();  // Add .request() here
+        // Request wallet connection using Connex certification
+        const certResponse = await connex.vendor
+            .sign('cert', {
+                purpose: 'identification',
+                payload: {
+                    type: 'text',
+                    content: 'Connect to Incinerator'
+                }
+            })
+            .request();
 
-        if (!certificateResponse || !certificateResponse.annex || !certificateResponse.annex.signer) {
+        if (!certResponse?.annex?.signer) {
             throw new Error('Invalid wallet response');
         }
 
-        currentAccount = certificateResponse.annex.signer;
+        currentAccount = certResponse.annex.signer;
         return {
             success: true,
-            address: currentAccount
+            address: currentAccount,
+            network: connex.thor.genesis.id // Get network info
         };
     } catch (error) {
         console.error('Wallet connection error:', error);
@@ -54,34 +62,36 @@ async function connectVeChainWallet() {
 }
 
 async function getBalances() {
-    if (!currentAccount) {
-        throw new Error('No wallet connected');
+    if (!currentAccount || !connex) {
+        throw new Error('Wallet not connected');
     }
 
     try {
-        const vetBalance = await connex.thor.account(currentAccount).get();
-        if (!vetBalance) {
+        // Get VET balance using thor.account
+        const vetAccount = await connex.thor.account(currentAccount).get();
+        if (!vetAccount) {
             throw new Error('Failed to fetch VET balance');
         }
-        
+
+        // Get VTHO balance using contract call
         const vthoContract = '0x0000000000000000000000000000456E65726779';
         const vthoABI = {
             "constant": true,
-            "inputs": [{"name": "_owner","type": "address"}],
+            "inputs": [{"name": "_owner", "type": "address"}],
             "name": "balanceOf",
-            "outputs": [{"name": "balance","type": "uint256"}],
+            "outputs": [{"name": "balance", "type": "uint256"}],
             "type": "function"
         };
-        
+
         const vthoMethod = connex.thor.account(vthoContract).method(vthoABI);
         const vthoBalance = await vthoMethod.call(currentAccount);
-        
-        if (!vthoBalance || !vthoBalance.decoded) {
+
+        if (!vthoBalance?.decoded?.[0]) {
             throw new Error('Failed to fetch VTHO balance');
         }
 
         return {
-            vet: formatBalance(vetBalance.balance),
+            vet: formatBalance(vetAccount.balance),
             vtho: formatBalance(vthoBalance.decoded[0])
         };
     } catch (error) {
